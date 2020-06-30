@@ -3,8 +3,7 @@
 .gradle
 
 # Report
-.allure/**/lib
-.allure/**/bin
+.allure
 surefire-reports
 build
 target
