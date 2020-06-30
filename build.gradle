@@ -1,0 +1,82 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id "io.qameta.allure" version "2.8.1"
+}
+
+allure {
+    autoconfigure = true
+    version = '2.12.0'  // Latest Allure Version
+    useJUnit5 {
+        version = '2.12.0' // Latest Allure Version
+    }
+}
+
+// Java target version
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:2.4.17'
+
+    // AShot
+    compile 'ru.yandex.qatools.ashot:ashot:1.5.4'
+
+    // Selenide
+    compile 'com.codeborne:selenide:5.2.6'
+
+    // JUnit 5
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.5.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.5.1'
+
+    // Allure
+    compile 'io.qameta.allure:allure-junit5:2.12.1'
+    testImplementation("io.qameta.allure:allure-selenide:2.12.1")
+    testRuntimeOnly('io.qameta.allure:allure-junit5:2.12.1')
+
+    compile 'org.slf4j:slf4j-nop:1.7.26'
+}
+
+test {
+    // JUnit 5
+    useJUnitPlatform()
+//    systemProperties = [
+//            'junit.jupiter.execution.parallel.enabled'             : 'true',
+//            'junit.jupiter.execution.parallel.mode.default'        : 'same_thread',
+//            'junit.jupiter.execution.parallel.mode.classes.default': 'concurrent'
+//    ]
+}
+
+tasks.withType(Test) {
+    // Always run tests, even when nothing changed.
+    dependsOn 'cleanTest'
+
+    // verbose logging in console
+    testLogging {
+        lifecycle {
+            events "started", "skipped", "failed", "passed", "standard_error", "standard_out"
+            exceptionFormat "full"
+        }
+    }
+    // эти логи для вывода результатов в teamcity
+    beforeTest { desc ->
+        def name = "${desc.classDisplayName}.${desc.name}"
+        logger.lifecycle("##teamcity[testStarted name='${name}']")
+    }
+    afterTest { desc, result ->
+        def name = "${desc.classDisplayName}.${desc.name}"
+        if (result.toString() == 'FAILURE') {
+            def message = result.failures.toString()
+                    .replaceAll(/\|/,"||")
+                    .replaceAll(/'/,"|'")
+                    .replaceAll(/\[/,"|[")
+                    .replaceAll(/]/,"|]")
+                    .replaceAll(/\r\n/,"|n")
+                    .replaceAll(/\n/,"|n")
+            println("##teamcity[testFailed name='${name}' message='${message}' duration='${result.endTime - result.startTime}']")
+        }
+        println("##teamcity[testFinished name='${name}' duration='${result.endTime - result.startTime}']")
+    }
+}

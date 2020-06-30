@@ -1,0 +1,24 @@
+# IDE files
+.idea
+.gradle
+
+# Report
+.allure/**/lib
+.allure/**/bin
+surefire-reports
+build
+target
+out
+ashotScreen/actual/**
+ashotScreen/diff/**
+*.log
+
+# Compiled source #
+###################
+*.iml
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
